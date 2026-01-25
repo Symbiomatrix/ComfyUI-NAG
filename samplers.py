@@ -26,6 +26,7 @@ import comfy.sampler_helpers
 import comfy.model_patcher
 import comfy.patcher_extension
 import comfy.hooks
+import comfy.utils
 from comfy.ldm.flux.model import Flux
 from comfy.ldm.chroma.model import Chroma
 from comfy.ldm.modules.diffusionmodules.openaimodel import UNetModel
@@ -139,6 +140,10 @@ class NAGCFGGuider(CFGGuider):
         for k in self.original_conds:
             self.conds[k] = list(map(lambda a: a.copy(), self.original_conds[k]))
         preprocess_conds_hooks(self.conds)
+        
+        device = self.model_patcher.load_device
+        if denoise_mask is not None:
+            denoise_mask = comfy.sampler_helpers.prepare_mask(denoise_mask, noise.shape, device)
 
         apply_guidance = self.nag_scale > 1.
 
