@@ -34,6 +34,7 @@ from comfy.ldm.wan.model import WanModel, VaceWanModel
 from comfy.ldm.hunyuan_video.model import HunyuanVideo
 from comfy.ldm.hidream.model import HiDreamImageTransformer2DModel
 from comfy.ldm.lumina.model import NextDiT
+from comfy.ldm.flux.model import Flux
 
 from .flux.model import NAGFluxSwitch
 from .chroma.model import NAGChromaSwitch
@@ -43,7 +44,7 @@ from .wan.model import NAGWanModelSwitch
 from .hunyuan_video.model import NAGHunyuanVideoSwitch
 from .hidream.model import NAGHiDreamImageTransformer2DModelSwitch
 from .lumina2.model import NAGNextDiTSwitch
-
+from .klein.model import NAGKleinSwitch
 
 def sample_with_nag(
         model,
@@ -150,7 +151,14 @@ class NAGCFGGuider(CFGGuider):
             if isinstance(model, OptimizedModule):
                 model = model._orig_mod
             model_type = type(model)
+            # Check if it's a Klein variant (Flux with global_modulation)
+            is_klein = False
             if model_type == Flux:
+                is_klein = hasattr(model.params, 'global_modulation') and model.params.global_modulation
+            
+            if model_type == Flux and is_klein:
+                switcher_cls = NAGKleinSwitch
+            elif model_type == Flux:
                 switcher_cls = NAGFluxSwitch
             elif model_type == Chroma:
                 switcher_cls = NAGChromaSwitch
